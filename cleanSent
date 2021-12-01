@@ -1,0 +1,43 @@
+Sub cleanSent()
+'20200115:zG
+'20211201:zG - adapt to clean multiple mailboxes
+' move items from Sent folder into inbox for tracking purposes
+
+    Dim myNameSpace As Outlook.NameSpace
+    Dim oAccount As Account
+    Dim myInbox As Outlook.Folder
+    Dim mySent As Outlook.Folder
+    Dim myItems As Outlook.Items
+    Dim myItem As Variant 'needs to be something generic (variant), to address MeetingItems mixed in with MailItems
+    Dim c, i, endi As Integer
+    Dim myAcctFolder As Folder
+    
+    Set myNameSpace = Application.GetNamespace("MAPI")
+    Set myInbox = myNameSpace.GetDefaultFolder(olFolderInbox)
+    
+    
+    For Each myAcctFolder In myNameSpace.Accounts.Session.Folders
+        If Left(myAcctFolder, 6) = "Public" Then
+            Exit For
+        End If
+        Set mySent = myAcctFolder.Folders.Item("Sent Items")
+        Set myItems = mySent.Items
+        endi = myItems.Count
+             
+        For i = 1 To endi
+                Set myItems = mySent.Items 'for some reason, this needs to be reset each and every iteration
+                Set myItem = myItems.Item(1)
+                With myItem
+        '           MsgBox "type: " & TypeName(myItem) & Chr(10) & _
+                            "subject: " & myItem.Subject
+                    c = c + 1                                   'counting total number of items moved
+                    .Move myInbox
+                End With
+        Next i
+        If c > 5 Then
+            MsgBox "Moved " & c & " items from Sent to Inbox."
+        ElseIf c = 0 Then
+            MsgBox myAcctFolder & " has nothing to move."
+        End If
+    Next
+End Sub
